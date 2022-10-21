@@ -9,7 +9,7 @@ import (
 )
 
 func welcomeRoute(c *fiber.Ctx) error {
-	return c.SendString("Hey!")
+	return c.SendString("It works!")
 }
 
 func allRoutes(app *fiber.App) {
@@ -26,6 +26,10 @@ func allRoutes(app *fiber.App) {
 	app.Get("/api/products/:id", routes.GetProduct)
 	app.Put("/api/products/:id", routes.UpdateProduct)
 	app.Delete("/api/products/:id", routes.DeleteProduct)
+
+	app.Post("api/orders", routes.CreateOrder)
+	app.Get("api/orders", routes.GetOrders)
+	app.Get("api/orders/:id", routes.GetOrder)
 }
 
 func main() {
