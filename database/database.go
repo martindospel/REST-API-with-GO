@@ -27,8 +27,13 @@ func ConnectDb() {
 	db.Logger = logger.Default.LogMode(logger.Info)
 	log.Println("Running migrations")
 
-	//this will create tables for user, products and orders
+	//this will create the necessary tables for user, products and orders
 	db.AutoMigrate(&models.User{}, &models.Product{}, &models.Order{})
+
+	//this will drop the specified tables, reseting the db (only activate this when needed)
+	// db.Migrator().DropTable(&models.User{})
+	// db.Migrator().DropTable(&models.Product{})
+	// db.Migrator().DropTable(&models.Order{})
 
 	Database = DbInstance{Db: db}
 }

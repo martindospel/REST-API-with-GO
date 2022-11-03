@@ -2,25 +2,47 @@ package routes
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/martindospel/REST-API-with-GO.git/database"
 	"github.com/martindospel/REST-API-with-GO.git/models"
 )
 
+type Product struct {
+	ID           uint      `json:"id"`
+	CreatedAt    time.Time `json:"created_at"`
+	Name         string    `json:"name"`
+	Expiry       int       `json:"expiry"`
+	SerialNumber string    `json:"serial_number"`
+}
+
+func CreateResponseProduct(product models.Product) Product {
+	return Product{ID: product.ID, CreatedAt: product.CreatedAt, Name: product.Name, Expiry: product.Expiry, SerialNumber: product.SerialNumber}
+}
+
 func CreateProduct(c *fiber.Ctx) error {
 	var product models.Product
+
 	if err := c.BodyParser(&product); err != nil {
 		return c.Status(400).JSON(err.Error())
 	}
+
 	database.Database.Db.Create(&product)
-	return c.Status(200).JSON(product)
+	responseProduct := CreateResponseProduct(product)
+	return c.Status(200).JSON(responseProduct)
 }
 
 func GetProducts(c *fiber.Ctx) error {
 	products := []models.Product{}
 	database.Database.Db.Find(&products)
-	return c.Status(200).JSON(products)
+	responseProducts := []Product{}
+	for _, product := range products {
+		responseProduct := CreateResponseProduct(product)
+		responseProducts = append(responseProducts, responseProduct)
+	}
+
+	return c.Status(200).JSON(responseProducts)
 }
 
 func findProduct(id int, product *models.Product) error {
@@ -33,50 +55,55 @@ func findProduct(id int, product *models.Product) error {
 
 func GetProduct(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
+
 	var product models.Product
+
 	if err != nil {
-		return c.Status(400).JSON("Id must be an integer")
+		return c.Status(400).JSON("Please ensure that :id is an integer")
 	}
+
 	if err := findProduct(id, &product); err != nil {
 		return c.Status(400).JSON(err.Error())
 	}
-	return c.Status(200).JSON(product)
+
+	responseProduct := CreateResponseProduct(product)
+
+	return c.Status(200).JSON(responseProduct)
 }
 
 func UpdateProduct(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
+
 	var product models.Product
+
 	if err != nil {
-		return c.Status(400).JSON("Id must be an integer")
+		return c.Status(400).JSON("Please ensure that the ID is an integer")
 	}
-	if err := findProduct(id, &product); err != nil {
+
+	err = findProduct(id, &product)
+
+	if err != nil {
 		return c.Status(400).JSON(err.Error())
 	}
+
 	type UpdateProduct struct {
-		Name         string `json:"name"`
-		SerialNumber string `json:"serial_number"`
+		Name         string    `json:"name"`
+		Expiry       time.Time `json:"expiry"`
+		SerialNumber string    `json:"serial_number"`
 	}
+
 	var updateData UpdateProduct
+
 	if err := c.BodyParser(&updateData); err != nil {
 		return c.Status(500).JSON(err.Error())
 	}
+
 	product.Name = updateData.Name
 	product.SerialNumber = updateData.SerialNumber
-	database.Database.Db.Save(&product)
-	return c.Status(200).JSON(product)
-}
 
-func DeleteProduct(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
-	var product models.Product
-	if err != nil {
-		return c.Status(400).JSON("Id must be an integer")
-	}
-	if err := findProduct(id, &product); err != nil {
-		return c.Status(400).JSON(err.Error())
-	}
-	if err := database.Database.Db.Delete(&product).Error; err != nil {
-		return c.Status(404).JSON(err.Error())
-	}
-	return c.Status(200).SendString("Successfully deleted product")
+	database.Database.Db.Save(&product)
+
+	responseProduct := CreateResponseProduct(product)
+
+	return c.Status(200).JSON(responseProduct)
 }
