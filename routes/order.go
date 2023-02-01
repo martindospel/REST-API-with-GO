@@ -46,6 +46,23 @@ func CreateOrder(c *fiber.Ctx) error {
 	return c.Status(200).JSON(responseOrder)
 }
 
+func GetOrders(c *fiber.Ctx) error {
+	orders := []models.Order{}
+	database.Database.Db.Find(&orders)
+	responseOrders := []Order{}
+
+	for _, order := range orders {
+		var user models.User
+		var product models.Product
+		database.Database.Db.Find(&user, "id = ?", order.UserRefer)
+		database.Database.Db.Find(&product, "id = ?", order.ProductRefer)
+		responseOrder := CreateResponseOrder(order, CreateResponseUser(user), CreateResponseProduct(product))
+		responseOrders = append(responseOrders, responseOrder)
+	}
+
+	return c.Status(200).JSON(responseOrders)
+}
+
 func FindOrder(id int, order *models.Order) error {
 	database.Database.Db.Find(&order, "id = ?", id)
 	if order.ID == 0 {
@@ -80,19 +97,21 @@ func GetOrder(c *fiber.Ctx) error {
 
 }
 
-func GetOrders(c *fiber.Ctx) error {
-	orders := []models.Order{}
-	database.Database.Db.Find(&orders)
-	responseOrders := []Order{}
+func DeleteOrder(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	var order models.Order
 
-	for _, order := range orders {
-		var user models.User
-		var product models.Product
-		database.Database.Db.Find(&user, "id = ?", order.UserRefer)
-		database.Database.Db.Find(&product, "id = ?", order.ProductRefer)
-		responseOrder := CreateResponseOrder(order, CreateResponseUser(user), CreateResponseProduct(product))
-		responseOrders = append(responseOrders, responseOrder)
+	if err != nil {
+		return c.Status(400).JSON("Please ensure that :id is an integer")
 	}
 
-	return c.Status(200).JSON(responseOrders)
+	if err := FindOrder(id, &order); err != nil {
+		return c.Status(400).JSON(err.Error())
+	}
+
+	if err := database.Database.Db.Delete(&order).Error; err != nil {
+		return c.Status(400).JSON("Unable to delete order")
+	}
+
+	return c.Status(200).JSON("Order deleted successfully")
 }

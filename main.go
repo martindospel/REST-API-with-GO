@@ -30,6 +30,7 @@ func allRoutes(app *fiber.App) {
 	app.Post("api/orders", routes.CreateOrder)
 	app.Get("api/orders", routes.GetOrders)
 	app.Get("api/orders/:id", routes.GetOrder)
+	app.Delete("api/orders/:id", routes.DeleteOrder)
 }
 
 func main() {

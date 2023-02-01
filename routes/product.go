@@ -2,7 +2,6 @@ package routes
 
 import (
 	"errors"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/martindospel/REST-API-with-GO.git/database"
@@ -10,15 +9,13 @@ import (
 )
 
 type Product struct {
-	ID           uint      `json:"id"`
-	CreatedAt    time.Time `json:"created_at"`
-	Name         string    `json:"name"`
-	Expiry       int       `json:"expiry"`
-	SerialNumber string    `json:"serial_number"`
+	ID           uint   `json:"id"`
+	Name         string `json:"name"`
+	SerialNumber string `json:"serial_number"`
 }
 
 func CreateResponseProduct(product models.Product) Product {
-	return Product{ID: product.ID, CreatedAt: product.CreatedAt, Name: product.Name, Expiry: product.Expiry, SerialNumber: product.SerialNumber}
+	return Product{ID: product.ID, Name: product.Name, SerialNumber: product.SerialNumber}
 }
 
 func CreateProduct(c *fiber.Ctx) error {
@@ -77,7 +74,7 @@ func UpdateProduct(c *fiber.Ctx) error {
 	var product models.Product
 
 	if err != nil {
-		return c.Status(400).JSON("Please ensure that the ID is an integer")
+		return c.Status(400).JSON("Please ensure that :id is an integer")
 	}
 
 	err = findProduct(id, &product)
@@ -87,9 +84,8 @@ func UpdateProduct(c *fiber.Ctx) error {
 	}
 
 	type UpdateProduct struct {
-		Name         string    `json:"name"`
-		Expiry       time.Time `json:"expiry"`
-		SerialNumber string    `json:"serial_number"`
+		Name         string `json:"name"`
+		SerialNumber string `json:"serial_number"`
 	}
 
 	var updateData UpdateProduct
